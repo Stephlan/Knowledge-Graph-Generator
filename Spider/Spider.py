@@ -1,6 +1,6 @@
-#-*-coding:utf-8-*- #编码声明，不要忘记！
-import requests  #这里使用requests，小脚本用它最合适！
-from lxml import html    #这里我们用lxml，也就是xpath的方法
+#-*-coding:utf-8-*-
+import requests
+from lxml import html
 import csv
 import random
 import time
@@ -11,17 +11,16 @@ class Spider:
         self.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36"}
 
     def crawl(self, disease, symptom, condition = "互动百科"):
-        req = "s?wd=" + disease + "%2C" + symptom + "%20" + condition #A链球菌群感染%2C头痛%20互动百科
-        page = requests.get(self.url + req, self.headers)
+        req = "s?wd=" + disease + "%2C" + symptom + "%20" + condition #E.g. A链球菌群感染%2C头痛%20互动百科
+        page = requests.get(self.url + req, headers = self.headers, proxies = {'https':'socks5://127.0.0.1:1080'})
         print(self.url + req)
-        #对获取到的page格式化操作，方便后面用XPath来解析
         tree = html.fromstring(page.text)
-        abstract = tree.xpath('//*[@id="1"]/div/div[2]/div[1]//text()')
+        abstract = tree.xpath('//*[@id="1"]/div[1]//text()')
         return "".join(abstract[1:])
 
-filepath = "../Datasets/disease_symptom.csv"
-outpath = "../Datasets/outputs.csv"
-errpath = "../Datasets/errputs.csv"
+filepath = "../Datasets/errputs.csv"
+outpath = "../Datasets/outputs3.csv"
+errpath = "../Datasets/errputs3.csv"
 with open(filepath, "r", encoding="utf8") as ds:
     with open(outpath, "a", encoding="utf8") as output:
         with open(errpath, "a", encoding="utf8") as errput:
