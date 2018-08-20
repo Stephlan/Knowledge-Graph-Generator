@@ -1,24 +1,35 @@
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph, Node, Relationship, NodeSelector
+import csv
 
 class NeoManager:
-    def __init__(self, host, port, userName, password):
+    def __init__(self, host, port, username, password):
         self.username = username
         self.host = host
         self.port = port
         self.password = password
         
     def connect(self):
-        self.graph = Graph("http://" + self.host + ":" + str(self.port), self.username, self.password)
+        print("http://" + self.host + ":" + str(self.port), self.username, self.password)
+        self.graph = Graph("http://" + self.host + ":" + str(self.port), username = self.username, password = self.password)
         if self.graph != None:
             print("Neo4j Database Connected.")
+            self.selector = NodeSelector(self.graph)
 
-    def createNode(self, nodeLabel, nodeName):
-        node = Node(label = nodelabel, name = nodename)
+    def createNode(self, nodelabel, nodename):
+        nodename = str(nodename)
+        nodelabel = str(nodelabel)
+        node = Node(nodelabel, name = nodename)
         self.graph.create(node)
         return node
 
     def createRelation(self, nodeSrc, nodeDst, relationName):
-        relationship = new Relationship(nodeSrc, relationName, nodeDst)
+        relationName = str(relationName)
+        if nodeSrc == None or nodeDst == None:
+            return
+        relationship = Relationship(nodeSrc, relationName, nodeDst)
+        print(relationship)
+        # self.setRelationAttribute(relation, 'credential', 0.9)
+        self.graph.create(relationship)
         return relationship
 
     def setRelationAttribute(self, relationship, attribute, val):
@@ -28,22 +39,52 @@ class NeoManager:
     def getRelationAttribute(self, relationship, attribute):
         return relationship[attribute]
 
-    def findByLabel(self, findLabel):
-        return self.graph.find_one(label = findLabel)
-
     def findByName(self, findName):
-        return self.graph.find_one(property_key = "name", property_value = findName)
-        
+        findName = str(findName)
+        trustable = self.graph.find_one(property_key = "name", property_value = findName, label = 'labelHolder')
+        if trustable == None:
+            untrustable = self.graph.find_one(property_key = "name", property_value = findName, label = 'Creditless')
+            return False, untrustable
+        else:
+            return True, trustable
+
+    def findAllByLabel(self, findLabel):
+        findLabel = str(findLabel)
+        selected = self.selector.select(findLabel)
+        print(selected)
+
     def findNodeRelation(self, node):
         return self.graph.match_one(start_node = node, bidirectional = True)
 
-    def getAllRelations(self):
-        return self.graph.relationship_types()
+    def hasStartToRelation(self, node, relstr):
+        return self.graph.match(start_node=node, rel_type=relstr)
 
-    def getRelationBetween(self, nodeNameA, nodeNameB):
-        nodeA = graph.findByName(nodeNameA)
-        nodeB = graph.findByName(nodeNameB)
+    def hasEndWithRelation(self, node, relstr):
+        return self.graph.match(end_node=node, rel_type=relstr)
+
+    def getRelationBetween(self, nodeA, nodeB):
         if nodeA == None or nodeB == None:
             return None
-        else
+        else:
             return self.graph.match(start_node = nodeA, end_node = nodeB, bidirectional = True)
+
+
+
+# neo = NeoManager('localhost', 7474, 'neo4j', '123')
+# neo.connect()
+# with open('../Datasets/TrainSetUnique.csv', 'r', encoding = 'utf-8') as input:
+#     reader = csv.reader(input)
+#     # row: [0] entity1 [1] entity2 [2] relation [3] example
+#     for row in reader:
+#         node0 = neo.findByName(row[0])
+#         node1 = neo.findByName(row[1])
+#         print(node0)
+#         if node0 == None:
+#             node0 = neo.createNode("labelHolder", row[0])
+#         if node1 == None:
+#             node1 = neo.createNode("labelHolder", row[1])
+#         relation = neo.getRelationBetween(node0, node1)
+#         print(relation)
+#         if relation == None or relation != row[2]:
+#             print(row[2])
+#             relation = neo.createRelation(node0, node1, row[2])
