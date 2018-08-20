@@ -1,0 +1,98 @@
+# coding=utf-8
+
+from stanfordcorenlp import StanfordCoreNLP
+
+class DependencyParser:
+    def __init__(self):
+        self.storage = []
+        self.depDict = {}
+    def parse(self, filepath = 'logMessage.txt'):
+        cnt = 0
+        nlp = StanfordCoreNLP(r'D:\Softwares\stanford-corenlp-full-2018-02-27\stanford-corenlp-full-2018-02-27', lang='en', memory='8g')
+        with open(filepath, 'r') as filein:
+            for line in filein:
+                cnt += 1
+                print(cnt)
+                dependencies = nlp.dependency_parse(line)
+                print(dependencies)
+                paths = Paths()
+                # paths.recordSentence(nlp.word_tokenize(line))
+                for each in dependencies:
+                    if each[0] == 'ROOT':
+                        continue
+                    else:
+                        paths.addPath(each)
+                        
+                sentenceInfo, ret = paths.outPaths()
+                for idx in sentenceInfo:
+                    self.countDependencies(idx)
+                
+                self.storage.append((dependencies, ret, line))
+                print(ret)
+                print("=====")
+        self.outDependencies()
+
+    def countDependencies(self, deps):
+        if type(deps) != type([]):
+            deps = [deps]
+        for each in deps:
+            if each in self.depDict:
+                self.depDict[each] += 1
+            else:
+                self.depDict[each] = 1
+
+    def outDependencies(self):
+        print(self.depDict)
+        return self.storage, self.depDict
+
+class Path:
+    def __init__(self, rel, end, begin): #"begin" depends on "end"
+        self.begin = str(begin)
+        self.end = str(end)
+        self.rel = str(rel)
+
+class Paths:
+    def __init__(self):
+        self.beginDict = {}
+        self.sentencInfo = []
+
+    def addPath(self, deptuple):
+        # print(deptuple)
+        path = Path(deptuple[0], deptuple[1], deptuple[2])
+        self.sentencInfo.append(deptuple[0])
+        if path.begin in self.beginDict:
+            self.beginDict[path.begin].append(path.end)
+        else:
+            self.beginDict[path.begin] = []
+            self.beginDict[path.begin].append(path.end)
+
+    def outPaths(self):
+        curList = []
+        ret = []
+        # print(self.beginDict)
+        for eachBegin in self.beginDict:
+            curList.append(eachBegin)
+        cnt = 0 #FIXME: Resolve loop in the 'tree'
+        while len(curList) > 0 and cnt < 10:
+            cnt += 1
+            cur = curList.pop(0)
+            curLast = cur.split("/")
+            curLast = curLast[len(curLast) - 1]
+            if curLast not in self.beginDict:
+                flag = False
+                for each in ret:
+                    if cur in each:
+                        flag = True
+                        break
+                    elif each in cur:
+                        ret.remove(each)
+                        flag = True
+                        ret.append(cur)
+                        break
+                if not flag:
+                    ret.append(cur)
+            else:
+                for eachEnd in self.beginDict[curLast]:
+                    curList.append(cur + "/" + eachEnd)
+        return self.sentencInfo, ret
+

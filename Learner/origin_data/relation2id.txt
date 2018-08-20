@@ -1,0 +1,12 @@
+"subclass of",0
+"instance of",1
+"interact with",2
+"genetic Association",3
+"symptoms",4
+"taxon",5
+"topic’s main category",6
+"part",7
+"active role in",8
+"treated",9
+"cause and effect",10 
+"NA",11
