@@ -71,6 +71,11 @@ The whole process contains four steps:
 ## Details
 
 
+## Reference
+
+Github.com/qq547276542/Agriculture_KnowledgeGraph
+Github.com/crownpku/Information-Extraction-Chinese
+
 
 ## Contacts
 
